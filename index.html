@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+    <title>RHC Rurality Tiers</title>
+
+    <link
+      rel="stylesheet"
+      href="https://js.arcgis.com/4.8/esri/themes/light/main.css"
+    />
+    <script src="https://js.arcgis.com/4.8/"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+
+    <style>
+      html,
+      body,
+      
+      
+ 
+             
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+
+
+      #helptext {
+        border-radius: 0px;
+        position: fixed;
+        height: 75px;
+        font-family: arial;
+        margin: 5px;
+        padding: 10px;
+        z-index: 10;
+        background: #D3D3D3;
+        color: #444;
+        width: 150px;
+        left: 60px;
+        top: 125px;
+        border-color: #212223;
+        border-style: solid;
+             }
+
+      #searchbar {
+        bottom: 20px;
+        height: 33px;
+        top: 60px;
+        margin: 5px;
+        position: absolute;
+        text-align: left;
+        width: 300px;
+        z-index: 40;
+        left: 85px;
+      }
+
+       #resultwindow {
+        border-radius: 10px;
+        position: fixed;
+        height: auto;
+        font-family: arial;
+        margin: 5px;
+        padding: 10px;
+        z-index: 40;
+        background: #D3D3D3;
+        color: #444;
+        width: auto;
+        left: 65px;
+        top: 120px;
+        -moz-box-shadow: 0 0 10px #888;
+        -webkit-box-shadow: 0 0 10px #888;
+        box-shadow: 0 0 10px #888;
+        border-color: #212223;
+        border-width: 2px;
+        border-style: solid;
+             }
+
+        #loadingbar {
+        bottom: 20px;
+        height: 33px;
+        top: 100px;
+        margin: 5px;
+        position: absolute;
+        text-align: left;
+        width: 300px;
+        z-index: 40;
+        left: 69px;
+      }
+
+      #show_legend_button {
+        bottom: 25px;
+        height: 28px;
+        margin: 5px;
+        position: absolute;
+        text-align: left;
+        width: 30px;
+        z-index: 40;
+        left: 12px;
+      }
+
+    </style>
+
+  </head>
+
+  <body>
+   <!-- <div id="helptext"><strong>&nbsp T-Mobile.</strong></div> -->
+    <div id="viewDiv"></div>
+    <div id="helptext">
+
+
+  <div>
+    <input type="radio" id="huey" name="drone" value="huey" checked />
+    <label for="huey">Selected Hexes</label>
+  </div>
+
+  <div>
+    <input type="radio" id="dewey" name="drone" value="dewey" />
+    <label for="dewey">December 2022 477</label>
+  </div>
+
+  <div>
+    <input type="radio" id="louie" name="drone" value="louie" />
+    <label for="louie">December 2023 477</label>
+  </div>
+
+    
+    
+    
+    <div id ="TableSwitch" class="onoffswitch">
+   
+    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch" checked onclick = "HideAndShowTable()">
+    <label class="onoffswitch-label" for="myonoffswitch">
+    <span class="onoffswitch-inner"></span>
+    <span class="onoffswitch-switch"></span>
+        
+        
+       <input type="button" class="button button1" id="tmobile" value="T-Mobile" />
+       <input type="button" class="button button2" id="att" value="AT&T" />
+       <input type="button" class="button button3" id="verizon" value="Verizon" />
+       <input type="button" class="button button4" id="uscellular" value="U.S. Cellular" />
+  
+
+
+
+
+     require(['esri/layers/VectorTileLayer',
+        "esri/Map","esri/Graphic","esri/symbols/SimpleMarkerSymbol","esri/symbols/SimpleFillSymbol","esri/widgets/Legend","esri/tasks/Locator","esri/geometry/support/webMercatorUtils","esri/geometry/Point",
+        "esri/views/MapView",
+        "esri/layers/FeatureLayer","esri/widgets/Search", "esri/widgets/Home","esri/tasks/support/Query", "esri/tasks/QueryTask","esri/identity/OAuthInfo", "esri/identity/IdentityManager", "dojo/domReady!"],
+
+      function(VectorTileLayer, Map, Graphic, SimpleMarkerSymbol, SimpleFillSymbol, Legend, Locator, webMercatorUtils, Point, MapView, FeatureLayer, Search, Home, Query, QueryTask, OAuthInfo, esriId) {
+        var map = new Map({
+          basemap: "dark-gray"
+        });
+
+        var view = new MapView({
+          container: "viewDiv",
+          map: map,
+          center: [-95.3, 38.397],
+          zoom: 5
+        });
+
+         var home = new Home({
+         view: view
+          }, "HomeButton");
+         view.ui.add(home, "top-left");
+
+         var template = {
+        title: 'Rural Tier'
+      }
+
+
+
+
+/* const clientId = 'x1GHZYw3t3zpV7wt';
+const redirectUri = 'https://jsfiddle.net/9h57xq3u/1/';
+const signInButton = document.getElementById('sign-in');
+// do this on a button click to avoid popup blockers
+document.addEventListener('click', function(){
+    window.open('https://www.arcgis.com/sharing/rest/oauth2/authorize?client_id='+clientId+'&response_type=token&expiration=20160&redirect_uri=' + window.encodeURIComponent(redirectUri), 'oauth-window', 'height=400,width=600,menubar=no,location=yes,resizable=yes,scrollbars=yes,status=yes')
+}); */
+
+
+            // Instantiate Feature Layyer
+            var d22_att_vtl = new VectorTileLayer({url:"https://tiles.arcgis.com/tiles/YnOQrIGdN9JGtBh4/arcgis/rest/services/Dec_22_ATT_VTL/VectorTileServer"});
+            var d23_att_vtl = new VectorTileLayer({url:"https://tiles.arcgis.com/tiles/YnOQrIGdN9JGtBh4/arcgis/rest/services/Dec_23_ATT_VTL/VectorTileServer"});
+            var selected_hexes = new VectorTileLayer({url:"https://tiles.arcgis.com/tiles/YnOQrIGdN9JGtBh4/arcgis/rest/services/Selected_Hexes/VectorTileServer"});
+/*             var featureLayer = new FeatureLayer({url:"https://services.arcgis.com/YnOQrIGdN9JGtBh4/arcgis/rest/services/brian_att_may/FeatureServer/0",
+                                                 outFields: ['*'],
+                                                 visible:true,
+                                                 popupTemplate: template}); */
+            map.add(d22_att_vtl);
+            map.add(d23_att_vtl);
+            map.add(selected_hexes);
+         
+
+            var B1 = document.getElementById('B1')
+            var B2 = document.getElementById('B2')
+            var B3 = document.getElementById('B3')
+
+            
+            // Toggle Layers 
+            
+            B1.addEventListener('click', function(){
+            if (B1.checked == false){
+            selected_hexes.visible = false
+            }})
+            
+            B1.addEventListener('click', function(){
+            if (B1.checked == true){
+            selected_hexes.visible = true
+            }})
+            
+            B2.addEventListener('click', function(){
+            if (B2.checked == false){
+            d22_att_vtl.visible = false
+            }})
+            
+            B2.addEventListener('click', function(){
+            if (B2.checked == true){
+            d22_att_vtl.visible = true
+            }})
+            
+            B3.addEventListener('click', function(){
+            if (B3.checked == false){
+            d23_att_vtl.visible = false
+            }})
+            
+            B3.addEventListener('click', function(){
+            if (B3.checked == true){
+            d23_att_vtl.visible = true
+            }})
+            
+
+  });
+
+
+
+
+
+
+
+.button {
+  background-color: #E071B9;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  transition-duration: 0.4s;
+  cursor: pointer;
+}
+
+.button1 {
+  background-color: white; 
+  color: black; 
+  border: 2px solid #E071B9;
+  position: absolute;
+  z-index: 40;
+  top:-54px;
+  left:2px;
+}
+
+.button1:hover {
+  background-color: #E071B9;
+  color: white;
+}
+
+.button2 {
+  background-color: white; 
+  color: black; 
+  border: 2px solid #008CBA;
+  position: absolute;
+  z-index: 40;
+  top:-54px;
+  left:92px;
+}
+
+.button2:hover {
+  background-color: #008CBA;
+  color: white;
+}
+
+.button3 {
+  background-color: white; 
+  color: black; 
+  border: 2px solid #f44336;
+  position: absolute;
+  z-index: 40;
+  top:-54px;
+  left:161px;
+}
+
+.button3:hover {
+  background-color: #f44336;
+  color: white;
+}
+
+.button4 {
+  background-color: white; 
+  color: black; 
+  border: 2px solid #F4CE14;
+  position: absolute;
+  z-index: 40;
+  top:-54px;
+  left:244px;
+}
+
+.button4:hover {
+  background-color: #F4CE14;
+  color: white;
+}
+
+
+p,
+label {
+  font:
+    1rem 'Fira Sans',
+    sans-serif;
+    font-size: 12px
+}
+
+input {
+  margin: 0.4rem;
+}
+
+
+
+
+
+
+.onoffswitch {
+    position: fixed; width: 110px; left: 60px; top: 88px;
+    -webkit-user-select:none; -moz-user-select:none; -ms-user-select: none;
+}
+.onoffswitch-checkbox {
+    display: none;
+}
+.onoffswitch-label {
+    display: block; overflow: hidden; cursor: pointer;
+    border: 2px solid #212223; border-radius: 20px;
+}
+.onoffswitch-inner {
+    display: block; width: 200%; margin-left: -100%;
+    transition: margin 0.2s ease-in 0s;
+}
+.onoffswitch-inner:before, .onoffswitch-inner:after {
+    display: block; float: left; width: 50%; height: 30px; padding: 0; line-height: 30px;
+    font-size: 14px; color: white; font-family: Trebuchet, Arial, sans-serif; font-weight: bold;
+    box-sizing: border-box;
+}
+.onoffswitch-inner:before {
+    content: "Stationary";
+    padding-left: 10px;
+    background-color: #34A7C1; color: #FFFFFF;
+}
+.onoffswitch-inner:after {
+    content: "In Vehicle";
+    padding-right: 10px;
+    background-color: #EEEEEE; color: #222326;
+    text-align: right;
+}
+.onoffswitch-switch {
+    display: block; width: 18px; margin: 6px;
+    background: #FFFFFF;
+    position: absolute; top: 0; bottom: 0;
+    right: 75px;
+    border: 2px solid #212223; border-radius: 20px;
+    transition: all 0.2s ease-in 0s; 
+}
+.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-inner {
+    margin-left: 0;
+}
+.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-switch {
+    right: 0px; 
+}
